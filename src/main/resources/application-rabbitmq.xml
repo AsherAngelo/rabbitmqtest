@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <mvc:annotation-driven/>
+
+    <context:component-scan base-package="com.rabbitmq"/>
+
+    <bean id="connectionFactory" class="org.springframework.amqp.rabbit.connection.CachingConnectionFactory">
+        <constructor-arg value="127.0.0.1"/><!--服务器ip地址-->
+        <property name="username" value="zhaomengjie"/>
+        <property name="password" value="zhaomengjie"/>
+        <property name="port" value="5672"/>
+        <property name="channelCacheSize" value="50"/>
+        <property name="virtualHost" value="zhaomengjie"/>
+    </bean>
+
+    <rabbit:admin connection-factory="connectionFactory"/>
+
+    <rabbit:queue id="RABBITMQ_MESSAGE_QUEUE" name="RABBITMQ_MESSAGE_QUEUE" durable="true" auto-delete="false" exclusive="false"/>
+
+    <!--自定义消息发送者start-->
+    <!-- exchange -->
+    <rabbit:direct-exchange name="RABBITMQ_MESSAGE_EXCHANGE" id="RABBITMQ_MESSAGE_EXCHANGE">
+        <rabbit:bindings>
+            <rabbit:binding queue="RABBITMQ_MESSAGE_QUEUE" key="RABBITMQ_MESSAGE_QUEUE_KEY"/>
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+
+    <rabbit:template exchange="RABBITMQ_MESSAGE_EXCHANGE" id="amqpTemplate" connection-factory="connectionFactory" reply-timeout="10000"/>
+    <!--自定义消息发送者end-->
+
+
+    <!--自定义消息接受者start-->
+    <bean id="messageReceiver" class="com.rabbitmq.Consumer"/>
+    <!-- queue监听器，观察监听模式。当有消息到达本应用时会通知监听在对应队列queue上的监听对象 -->
+    <rabbit:listener-container connection-factory="connectionFactory">
+        <rabbit:listener queues="RABBITMQ_MESSAGE_QUEUE" ref="messageReceiver" />
+    </rabbit:listener-container>
+    <!--自定义消息接受者end-->
+</beans>
