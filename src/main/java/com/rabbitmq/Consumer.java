@@ -11,7 +11,7 @@ public class Consumer implements ChannelAwareMessageListener {
 
     public void onMessage(Message message, Channel channel) throws Exception {
         String message1=new String(message.getBody(),"UTF-8");
-        if(message1.equals("hello rabbitmq发送消息")){
+        if(message1.equals("hello rabbitmq发送消息1")){
             basicACK(message,channel);
         }else{
             basicNACK(message,channel);
